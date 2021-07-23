@@ -1,11 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo"
 )
+
+type Kucing struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
 
 func home(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World Home!")
@@ -34,6 +41,26 @@ func getKucingFunc(c echo.Context) error {
 	})
 }
 
+func addKucingFunc(c echo.Context) error {
+	kucing := Kucing{}
+
+	defer c.Request().Body.Close()
+
+	err := json.NewDecoder(c.Request().Body).Decode(&kucing)
+	if err != nil {
+		log.Printf("Gagal melakukan decode %s", err)
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"status": "Gagal melakukan decode",
+		})
+	}
+
+	// == save to database here ==
+	log.Printf("Berhasil Menyimpan kucing dari request %v", kucing)
+	return c.JSON(http.StatusOK, map[string]string{
+		"status": "Success",
+	})
+}
+
 func main() {
 	fmt.Println("Hello World.")
 
@@ -42,6 +69,8 @@ func main() {
 	e.GET("/", home)
 
 	e.GET("/getKucing/:type", getKucingFunc)
+
+	e.POST("/addKucing", addKucingFunc)
 
 	e.Start(":8080")
 }
