@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
 type Kucing struct {
@@ -61,10 +62,25 @@ func addKucingFunc(c echo.Context) error {
 	})
 }
 
+func getDashboard(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{
+		"status":    "Success",
+		"dashboard": "yes",
+	})
+}
+
 func main() {
 	fmt.Println("Hello World.")
 
 	e := echo.New()
+
+	g := e.Group("/api/v1")
+
+	g.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "[${method}], host=${host}${path}, status=${status} latency=${latency}\n",
+	}))
+
+	g.GET("/dashboard", getDashboard)
 
 	e.GET("/", home)
 
