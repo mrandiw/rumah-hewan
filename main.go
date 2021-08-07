@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -78,6 +79,17 @@ func main() {
 
 	g.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "[${method}], host=${host}${path}, status=${status} latency=${latency}\n",
+	}))
+
+	g.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+
+		// query ke database
+
+		// Be careful to use constant time comparison to prevent timing attacks
+		if subtle.ConstantTimeCompare([]byte(username), []byte("andi")) == 1 && subtle.ConstantTimeCompare([]byte(password), []byte("123456")) == 1 {
+			return true, nil
+		}
+		return false, nil
 	}))
 
 	g.GET("/dashboard", getDashboard)
