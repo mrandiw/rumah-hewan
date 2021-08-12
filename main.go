@@ -70,10 +70,22 @@ func getDashboard(c echo.Context) error {
 	})
 }
 
+// ServerHeader middleware adds a `Server` header to the response.
+func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set(echo.HeaderServer, "Rumah Hewan 1.1")
+		c.Response().Header().Set("Developer", "Andi Wibowo")
+		return next(c)
+	}
+}
+
 func main() {
 	fmt.Println("Hello World.")
 
 	e := echo.New()
+
+	// Server header
+	e.Use(ServerHeader)
 
 	g := e.Group("/api/v1")
 
