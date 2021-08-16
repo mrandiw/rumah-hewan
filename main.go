@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -18,6 +19,23 @@ type Kucing struct {
 
 func home(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World Home!")
+}
+
+func login(c echo.Context) error {
+
+	username := c.QueryParam("username")
+	password := c.QueryParam("password")
+
+	if username == "andi" && password == "123456" {
+		cookie := new(http.Cookie)
+		cookie.Name = "SessionName"
+		cookie.Value = "SessionValue"
+		cookie.Expires = time.Now().Add(24 * time.Hour)
+		c.SetCookie(cookie)
+		return c.String(http.StatusOK, "Login Success.")
+	}
+
+	return c.String(http.StatusUnauthorized, "Login Failed.")
 }
 
 func getKucingFunc(c echo.Context) error {
@@ -65,17 +83,39 @@ func addKucingFunc(c echo.Context) error {
 
 func getDashboard(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
-		"status":    "Success",
-		"dashboard": "yes",
+		"status": "Success",
+		"page":   "dashboard",
 	})
 }
 
-// ServerHeader middleware adds a `Server` header to the response.
+func getDashboardCookie(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{
+		"status": "Success",
+		"page":   "cookie",
+	})
+}
+
+// === MIDDLEWARE ===
 func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Response().Header().Set(echo.HeaderServer, "Rumah Hewan 1.1")
 		c.Response().Header().Set("Developer", "Andi Wibowo")
 		return next(c)
+	}
+}
+
+func checkCookie(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cookie, err := c.Cookie("SessionName")
+		if err != nil {
+			return c.String(http.StatusUnauthorized, "Authentication Failed")
+		}
+
+		if cookie.Value == "SessionValue" {
+			return next(c)
+		}
+
+		return c.String(http.StatusUnauthorized, "Authentication Failed")
 	}
 }
 
@@ -88,6 +128,8 @@ func main() {
 	e.Use(ServerHeader)
 
 	g := e.Group("/api/v1")
+	gCookie := e.Group("/cookie/v1")
+	gCookie.Use(checkCookie)
 
 	g.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "[${method}], host=${host}${path}, status=${status} latency=${latency}\n",
@@ -105,8 +147,10 @@ func main() {
 	}))
 
 	g.GET("/dashboard", getDashboard)
+	gCookie.GET("/main", getDashboardCookie)
 
 	e.GET("/", home)
+	e.GET("/login", login)
 
 	e.GET("/getKucing/:type", getKucingFunc)
 
