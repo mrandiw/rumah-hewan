@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
@@ -15,6 +16,11 @@ import (
 type Kucing struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+type JwtClaims struct {
+	Name string `json:"name"`
+	jwt.StandardClaims
 }
 
 func home(c echo.Context) error {
@@ -32,10 +38,40 @@ func login(c echo.Context) error {
 		cookie.Value = "SessionValue"
 		cookie.Expires = time.Now().Add(24 * time.Hour)
 		c.SetCookie(cookie)
-		return c.String(http.StatusOK, "Login Success.")
+
+		// create jwt token
+		token, err := createJwtToken()
+		if err != nil {
+			log.Println("Failed Create JWT Token", err)
+			return c.String(http.StatusInternalServerError, "Failed Create JWT Token.")
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{
+			"token":  token,
+			"status": "Success",
+		})
 	}
 
-	return c.String(http.StatusUnauthorized, "Login Failed.")
+	return c.String(http.StatusOK, "Login Failed.")
+}
+
+func createJwtToken() (string, error) {
+	claims := JwtClaims{
+		"andi",
+		jwt.StandardClaims{
+			Id:        "main_user_id",
+			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+		},
+	}
+
+	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+
+	token, err := rawToken.SignedString([]byte("MySecret"))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 func getKucingFunc(c echo.Context) error {
@@ -95,6 +131,13 @@ func getDashboardCookie(c echo.Context) error {
 	})
 }
 
+func getDashboardJwt(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]string{
+		"status": "Success",
+		"page":   "JWT",
+	})
+}
+
 // === MIDDLEWARE ===
 func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -129,7 +172,13 @@ func main() {
 
 	g := e.Group("/api/v1")
 	gCookie := e.Group("/cookie/v1")
+	gJwt := e.Group("/jwt/v1")
+
 	gCookie.Use(checkCookie)
+	gJwt.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningMethod: "HS512",
+		SigningKey:    []byte("MySecret"),
+	}))
 
 	g.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "[${method}], host=${host}${path}, status=${status} latency=${latency}\n",
@@ -148,6 +197,7 @@ func main() {
 
 	g.GET("/dashboard", getDashboard)
 	gCookie.GET("/main", getDashboardCookie)
+	gJwt.GET("/main", getDashboardJwt)
 
 	e.GET("/", home)
 	e.GET("/login", login)
