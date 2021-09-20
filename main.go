@@ -176,6 +176,11 @@ func main() {
 	// Server header
 	e.Use(ServerHeader)
 
+	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:  "template",
+		Index: "index.html",
+	}))
+
 	g := e.Group("/api/v1")
 	gCookie := e.Group("/cookie/v1")
 	gJwt := e.Group("/jwt/v1")
@@ -206,7 +211,7 @@ func main() {
 	gCookie.GET("/main", getDashboardCookie)
 	gJwt.GET("/main", getDashboardJwt)
 
-	e.GET("/", home)
+	e.GET("/home", home)
 	e.GET("/login", login)
 
 	e.GET("/getKucing/:type", getKucingFunc)
