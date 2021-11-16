@@ -1,4 +1,4 @@
-module myapp
+module rumah-hewan
 
 go 1.16
 
