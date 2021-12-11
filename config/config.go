@@ -7,6 +7,9 @@ type Config struct {
 		Name string `json:"name"`
 		Host string `json:"host"`
 	} `json:"app"`
+	Database struct {
+		Mysql string `json:"mysql"`
+	} `json:"database"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

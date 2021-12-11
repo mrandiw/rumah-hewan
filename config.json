@@ -2,5 +2,8 @@
     "app" : {
         "name" : "rumah-hewan",
         "host" : "127.0.0.1:8080"
+    },
+    "database" : {
+        "mysql" : "root:23031996@tcp(127.0.0.1:3306)/rumah-hewan-db?charset=utf8mb4&parseTime=True&loc=Local"
     }
 }
