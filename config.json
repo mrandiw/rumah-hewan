@@ -4,6 +4,10 @@
         "host" : "127.0.0.1:8080"
     },
     "database" : {
-        "mysql" : "root:23031996@tcp(127.0.0.1:3306)/rumah-hewan-db?charset=utf8mb4&parseTime=True&loc=Local"
+        "mysql" : "root:23031996@tcp(127.0.0.1:3306)/rumah-hewan-db?charset=utf8mb4&parseTime=True&loc=Local",
+        "mongo": {
+            "db": "NGL",
+            "uri": "mongodb+srv://root:23031996@cluster0.c36kn.mongodb.net/?retryWrites=true&w=majority"
+        }
     }
 }

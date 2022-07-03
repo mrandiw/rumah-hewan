@@ -1,7 +1,7 @@
 package router
 
 import (
-	"rumah-hewan/api"
+	"rumah-hewan/api/handlers"
 	"rumah-hewan/api/middlewares"
 
 	"github.com/labstack/echo"
@@ -23,12 +23,35 @@ func New() *echo.Echo {
 	middlewares.SetJwtMiddlewares(gJwt)
 
 	// set main router
-	api.MainsGroup(e)
+	MainRouter(e)
 
 	// set group router
-	api.AdminGroup(g)
-	api.CookieGroup(gCookie)
-	api.JwtGroup(gJwt)
+	AdminRouter(g)
+	CookieRouter(gCookie)
+	JwtRouter(gJwt)
 
 	return e
+}
+
+func MainRouter(e *echo.Echo) {
+	e.GET("/home", handlers.Home)
+	e.GET("/login", handlers.Login)
+
+	e.GET("/getKucing/:type", handlers.GetKucingFunc)
+
+	e.POST("/addKucing", handlers.AddKucingFunc)
+}
+
+func AdminRouter(g *echo.Group) {
+	g.GET("/dashboard", handlers.GetDashboard)
+}
+
+func CookieRouter(e *echo.Group) {
+	e.GET("/main", handlers.GetDashboardCookie)
+
+}
+
+func JwtRouter(e *echo.Group) {
+	e.GET("/main", handlers.GetDashboardJwt)
+
 }

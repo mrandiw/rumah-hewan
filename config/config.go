@@ -9,6 +9,10 @@ type Config struct {
 	} `json:"app"`
 	Database struct {
 		Mysql string `json:"mysql"`
+		Mongo struct {
+			Db  string `json:"db"`
+			URI string `json:"uri"`
+		} `json:"mongo"`
 	} `json:"database"`
 }
 
